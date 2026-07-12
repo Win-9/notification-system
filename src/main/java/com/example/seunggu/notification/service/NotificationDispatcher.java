@@ -1,8 +1,10 @@
 package com.example.seunggu.notification.service;
 
+import com.example.seunggu.global.resolver.NotificationSenderResolver;
 import com.example.seunggu.notification.domain.Notification;
 import com.example.seunggu.notification.event.NotificationRegisteredEvent;
 import com.example.seunggu.notification.repository.NotificationRepository;
+import com.example.seunggu.notification.sender.NotificationSender;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -21,6 +23,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @RequiredArgsConstructor
 public class NotificationDispatcher {
 
+    private final NotificationSenderResolver senderResolver;
     private final NotificationRepository repository;
 
     /**
@@ -38,9 +41,9 @@ public class NotificationDispatcher {
         }
 
         try {
-            // TODO: 실제 발송 로직 (sender 제거됨 — 추후 재구성 예정)
-            log.info("[발송 예정] id={}, channel={}, to={}",
-                    notification.getId(), notification.getChannel(), notification.getRecipient());
+            /** 실제 알림 send **/
+            NotificationSender sender = senderResolver.resolve(notification.getChannel());
+            sender.send(notification);
             notification.markSent();
         } catch (Exception e) {
             notification.markFailed();
