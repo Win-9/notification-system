@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -17,7 +18,10 @@ import lombok.NoArgsConstructor;
  * 알림 엔티티. 상태를 DB(MySQL)에 저장한다.
  */
 @Entity
-@Table(name = "notification")
+@Table(name = "notification",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_notification_idempotency_key",
+                columnNames = "idempotency_key"))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Notification {
@@ -26,6 +30,10 @@ public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    /** 멱등성 키. 같은 요청을 식별해 중복 발송을 막는 값 (유니크 제약). */
+    @Column(name = "idempotency_key", nullable = false, length = 100)
+    private String idempotencyKey;
 
     /** 발송 채널. KAKAO / EMAIL / SMS 중 하나 (문자열로 저장). */
     @Enumerated(EnumType.STRING)
@@ -57,10 +65,12 @@ public class Notification {
     @Column(name = "sent_at")
     private LocalDateTime sentAt;
 
-    public Notification(NotificationChannel channel,
+    public Notification(String idempotencyKey,
+                        NotificationChannel channel,
                         String recipient,
                         String title,
                         String message) {
+        this.idempotencyKey = idempotencyKey;
         this.channel = channel;
         this.recipient = recipient;
         this.title = title;

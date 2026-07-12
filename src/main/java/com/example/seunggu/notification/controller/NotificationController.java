@@ -5,12 +5,7 @@ import com.example.seunggu.notification.dto.NotificationResponse;
 import com.example.seunggu.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/notifications")
@@ -21,8 +16,10 @@ public class NotificationController {
 
     /** 알림 등록. 접수만 하고 실제 발송은 비동기로 진행되므로 202 Accepted 를 반환한다. */
     @PostMapping
-    public ResponseEntity<NotificationResponse> register(@RequestBody NotificationRequest request) {
-        NotificationResponse response = notificationService.register(request);
+    public ResponseEntity<NotificationResponse> register(
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
+            @RequestBody NotificationRequest request) {
+        NotificationResponse response = notificationService.register(idempotencyKey, request);
         return ResponseEntity.accepted().body(response);
     }
 
