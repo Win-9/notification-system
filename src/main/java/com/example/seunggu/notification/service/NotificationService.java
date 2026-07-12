@@ -1,30 +1,25 @@
 package com.example.seunggu.notification.service;
 
 import com.example.seunggu.global.exception.DuplicateRequestException;
-import com.example.seunggu.notification.domain.Notification;
+import com.example.seunggu.notification.dto.IdempotencyDto;
 import com.example.seunggu.notification.dto.NotificationRequest;
 import com.example.seunggu.notification.dto.NotificationResponse;
-import com.example.seunggu.notification.event.NotificationRegisteredEvent;
 import com.example.seunggu.notification.repository.NotificationRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Duration;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RLock;
+import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
-import org.springframework.context.ApplicationEventPublisher;
+import org.redisson.client.codec.StringCodec;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 알림 등록/조회 서비스.
- * 등록 시 알림을 저장(PENDING)하고, 커밋 이후 비동기 발송을 위해 이벤트를 발행한다.
- * 실제 발송은 {@link NotificationDispatcher} 가 thread pool 에서 처리한다.
- *
- * <p>멱등성(패턴 ②): Redis 분산 락(RLock)으로 동시 요청을 1차 차단하고,
- * DB 의 idempotency_key 유니크 제약을 최후 방어선으로 둔다.
  */
 @Slf4j
 @Service
@@ -32,59 +27,59 @@ import org.springframework.transaction.annotation.Transactional;
 public class NotificationService {
 
     private final NotificationRepository repository;
-    private final ApplicationEventPublisher eventPublisher;
+    private final NotificationRegistrar registrar;
     private final RedissonClient redissonClient;
+    private final ObjectMapper objectMapper;
 
-    private static final String LOCK_PREFIX = "noti:idem:lock:";
+    private static final String KEY_PREFIX = "noti:idem:";
+    private static final Duration PENDING_TTL = Duration.ofSeconds(10);
+    private static final Duration DONE_TTL = Duration.ofHours(24);
 
-    @Transactional
     public NotificationResponse register(String key, NotificationRequest request) {
         validate(request);
 
-        RLock lock = redissonClient.getLock(LOCK_PREFIX + key);
-        boolean locked;
-        try {
-            locked = lock.tryLock(0, 10, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("락 획득 중 인터럽트 발생", e);
-        }
+        RBucket<String> bucket = redissonClient.getBucket(KEY_PREFIX + key, StringCodec.INSTANCE);
 
-        if (!locked) {
-            throw new DuplicateRequestException("이미 처리 중인 요청입니다: " + key);
+        boolean claimed = bucket.setIfAbsent(write(IdempotencyDto.pending()), PENDING_TTL);
+        if (!claimed) {
+            return handleExisting(key, bucket);
         }
 
         try {
-            Optional<Notification> existing = repository.findByIdempotencyKey(key);
-            if (existing.isPresent()) {
-                log.info("멱등 요청 감지 — 기존 알림 반환 key={}", key);
-                return NotificationResponse.from(existing.get());
-            }
+            NotificationResponse response = registrar.persist(key, request);
 
-            Notification saved = repository.save(new Notification(
-                    key,
-                    request.getChannel(),
-                    request.getRecipient(),
-                    request.getTitle(),
-                    request.getMessage()
-            ));
-            // 커밋 이후 발송이 트리거되도록 이벤트 발행 (AFTER_COMMIT 리스너).
-            eventPublisher.publishEvent(new NotificationRegisteredEvent(saved.getId()));
-            return NotificationResponse.from(saved);
+            bucket.set(write(IdempotencyDto.done(response)), DONE_TTL);
+            return response;
 
         } catch (DataIntegrityViolationException e) {
-            log.info("동시 멱등 경합 — 유니크 제약으로 중복 저장 방지 key={}", key);
-            throw new DuplicateRequestException("이미 처리된 요청입니다: " + key);
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
+            NotificationResponse existing = repository.findByIdempotencyKey(key)
+                    .map(NotificationResponse::from)
+                    .orElseThrow(() -> new DuplicateRequestException("이미 처리된 요청입니다: " + key));
+            bucket.set(write(IdempotencyDto.done(existing)), DONE_TTL);
+            return existing;
+
+        } catch (RuntimeException e) {
+            bucket.delete();
+            throw e;
         }
     }
 
     @Transactional(readOnly = true)
     public Optional<NotificationResponse> find(Long id) {
         return repository.findById(id).map(NotificationResponse::from);
+    }
+
+    private NotificationResponse handleExisting(String key, RBucket<String> bucket) {
+        String raw = bucket.get();
+        if (raw == null) {
+            throw new DuplicateRequestException("요청을 처리 중입니다. 잠시 후 다시 시도하세요: " + key);
+        }
+
+        IdempotencyDto record = read(raw);
+        if (record.isPending()) {
+            throw new DuplicateRequestException("이미 처리 중인 요청입니다: " + key);
+        }
+        return record.toResponse();
     }
 
     private void validate(NotificationRequest request) {
@@ -96,6 +91,22 @@ public class NotificationService {
         }
         if (request.getMessage() == null || request.getMessage().isBlank()) {
             throw new IllegalArgumentException("message 는 필수입니다.");
+        }
+    }
+
+    private String write(IdempotencyDto record) {
+        try {
+            return objectMapper.writeValueAsString(record);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("멱등성 레코드 직렬화 실패", e);
+        }
+    }
+
+    private IdempotencyDto read(String raw) {
+        try {
+            return objectMapper.readValue(raw, IdempotencyDto.class);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("멱등성 레코드 역직렬화 실패", e);
         }
     }
 }
