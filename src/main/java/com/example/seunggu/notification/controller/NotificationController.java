@@ -14,7 +14,7 @@ public class NotificationController {
 
     private final NotificationService notificationService;
 
-    /** 알림 등록. 접수만 하고 실제 발송은 비동기로 진행되므로 202 Accepted 를 반환한다. */
+    /** 알림 등록. 실제 발송은 비동기로 진행 */
     @PostMapping
     public ResponseEntity<NotificationResponse> register(
             @RequestHeader("Idempotency-Key") String idempotencyKey,
