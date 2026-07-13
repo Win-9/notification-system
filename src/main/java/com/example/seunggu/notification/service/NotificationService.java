@@ -33,13 +33,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class NotificationService {
 
     private final NotificationRepository repository;
-    private final ApplicationEventPublisher eventPublisher;
     private final RedissonClient redissonClient;
+    private final NotificationRegistrar registrar;
 
     private static final String IDEM_PREFIX = "noti:idem:";
     private static final Duration IDEM_TTL = Duration.ofHours(24);
 
-    @Transactional
     public NotificationResponse register(String key, NotificationRequest request) {
         validate(request);
 
@@ -52,22 +51,12 @@ public class NotificationService {
         }
 
         try {
-            Notification saved = repository.save(new Notification(
-                    key,
-                    request.getChannel(),
-                    request.getRecipient(),
-                    request.getTitle(),
-                    request.getMessage()
-            ));
-            // 커밋 이후 발송이 트리거되도록 이벤트 발행 (AFTER_COMMIT 리스너).
-            eventPublisher.publishEvent(new NotificationRegisteredEvent(saved.getId()));
-            return NotificationResponse.from(saved);
-
+            // save 트랜잭션 분리
+            return registrar.persist(key, request);
         } catch (DataIntegrityViolationException e) {
-            // Redis 마커는 유실됐지만 DB 엔 이미 존재 → 유니크 제약이 잡아준 경우 (최후 방어선).
+            // Redis 마커는 유실됐지만 DB 엔 이미 존재
             log.info("DB 유니크 제약으로 중복 방지 (Redis 마커 유실 추정) key={}", key);
             throw new DuplicateRequestException("이미 처리된 요청입니다: " + key);
-
         } catch (RuntimeException e) {
             // 처리 실패 → Redis 마커를 지워 재시도를 허용한다.
             marker.delete();

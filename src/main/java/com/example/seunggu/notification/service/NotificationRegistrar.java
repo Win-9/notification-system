@@ -29,6 +29,7 @@ public class NotificationRegistrar {
                 request.getTitle(),
                 request.getMessage()
         ));
+
         // 커밋 이후 발송이 트리거되도록 이벤트 발행 (AFTER_COMMIT 리스너).
         eventPublisher.publishEvent(new NotificationRegisteredEvent(saved.getId()));
         return NotificationResponse.from(saved);
