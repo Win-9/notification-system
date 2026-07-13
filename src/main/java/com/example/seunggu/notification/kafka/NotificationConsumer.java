@@ -7,7 +7,10 @@ import com.example.seunggu.notification.domain.NotificationStatus;
 import com.example.seunggu.notification.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.annotation.DltHandler;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.RetryableTopic;
+import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +23,10 @@ public class NotificationConsumer {
     private final NotificationRepository repository;
     private final NotificationSenderResolver senderResolver;
 
+    @RetryableTopic(
+            attempts = "5",
+            backoff = @Backoff(delay = 2000, multiplier = 2.0)
+    )
     @KafkaListener(
             topics = KafkaTopicConfig.NOTIFICATION_TOPIC,
             groupId = "${spring.kafka.consumer.group-id}")
@@ -37,13 +44,21 @@ public class NotificationConsumer {
             return;
         }
 
-        try {
-            senderResolver.resolve(notification.getChannel()).send(notification);
-            notification.markSent();
-            log.info("알림 발송 완료 id={}, channel={}", id, notification.getChannel());
-        } catch (Exception e) {
-            notification.markFailed();
-            log.error("알림 발송 실패 id={}", id, e);
-        }
+        senderResolver.resolve(notification.getChannel()).send(notification);
+        notification.markSent();
+        log.info("알림 발송 완료 id={}, channel={}", id, notification.getChannel());
+    }
+
+    @DltHandler
+    @Transactional
+    public void handleDlt(String notificationId) {
+        Long id = Long.valueOf(notificationId);
+        repository.findById(id).ifPresentOrElse(
+                notification -> {
+                    notification.markFailed();
+                    log.error("[DLT] 최종 발송 실패 — 격리됨 id={}", id);
+                },
+                () -> log.error("[DLT] 알림 없음 id={}", id)
+        );
     }
 }

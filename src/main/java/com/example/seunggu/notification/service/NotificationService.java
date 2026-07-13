@@ -19,13 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 알림 등록/조회 서비스.
- * 등록 시 알림을 저장(PENDING)하고, 커밋 이후 비동기 발송을 위해 이벤트를 발행한다.
- * 실제 발송은 {@link NotificationDispatcher} 가 thread pool 에서 처리한다.
- *
- * <p>멱등성: Redis 를 <b>판별 주체</b>로 삼는다.
- * {@code RBucket.setIfAbsent}(= SETNX + TTL)는 원자적이라 "처음인지" 판별과
- * 동시 요청 차단을 한 번에 처리한다. DB 의 유니크 제약은 Redis 유실 시 대비한 최후 방어선이다.
+ * 등록 시 알림을 저장(PENDING)하고, 커밋 이후 비동기 발송을 위해 이벤트를 발행.
  */
 @Slf4j
 @Service
