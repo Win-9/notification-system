@@ -89,7 +89,7 @@ com.example.seunggu
 - **결정**: Kafka 메시지 key = `notificationId`, value = `notificationId`(문자열). Consumer가 이 ID로 DB에서 조회.
 - **이유**: 메시지를 가볍게 유지하고 **DB를 단일 진실(source of truth)** 로 삼기 위함. 페이로드를 통째로 싣지 않아 stale 데이터 문제가 없다.
 
-> **고민 흔적**: 수신자(userId/recipient)를 파티션 키로 쓰면 **"동일 수신자 알림의 순서 보장"** 이점이 있다. 현재는 알림 단위 처리라 `notificationId`를 키로 두었고, 수신자별 순서가 중요해지면 recipient 기반 키로 전환 가능(→ 추후 개선).
+> **고민 흔적**: 수신자(userId/recipient)를 파티션 키로 쓰면 **"동일 수신자 알림의 순서 보장"** 이점이 있다. 현재는 알림 단위 처리라 `notificationId`를 키로 두었음.
 
 ### 3.3 커밋 이후 발행 (AFTER_COMMIT)
 - **결정**: `register()`에서 바로 Kafka로 보내지 않고, **DB 커밋 후** `@TransactionalEventListener(phase = AFTER_COMMIT)`에서 발행.
