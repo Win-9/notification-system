@@ -104,7 +104,37 @@ com.example.seunggu
 
 ### 3.5 채널 발송 = 전략 패턴
 - **결정**: `NotificationSender` 인터페이스 + `Kakao/Email/SmsSender` 구현 + `NotificationSenderResolver`(채널→발송기 매핑).
-- **이유**: 채널 추가 시 새 `@Component` 하나만 추가하면 `List<NotificationSender>` 자동 주입으로 Resolver에 편입(OCP). Consumer는 구체 발송기를 몰라도 된다. 지금은 Mock(로그)이지만, 실제 API 클라이언트로 바꿔도 구조 불변.
+
+**기존 if-else 방식의 문제**
+
+처음엔 한 곳에서 채널을 `if-else`(또는 `switch`)로 분기하는 방식을 떠올릴 수 있다:
+```java
+// if-else 방식
+public void send(Notification n) {
+    if (n.getChannel() == KAKAO)      log.info("[카카오톡] ...");
+    else if (n.getChannel() == EMAIL) log.info("[이메일] ...");
+    else if (n.getChannel() == SMS)   log.info("[SMS] ...");
+    // 채널 추가 시 이 분기문을 계속 수정해야 함
+}
+```
+```java
+// 전략 패턴
+senderResolver.resolve(n.getChannel()).send(n);  // 분기 없음. 채널별 구현이 알아서 처리
+```
+
+**두 방식의 차이**
+
+| 관점 | if-else | 전략 패턴 |
+|------|---------|-----------|
+| **채널 추가** | 기존 `send()`의 분기문을 **수정**해야 함 (OCP 위반) | `NotificationSender` 구현체 하나 **추가**만 하면 끝 (기존 코드 불변, OCP 준수) |
+| **책임 분리** | 한 메서드/클래스가 **모든 채널 로직**을 떠안아 비대해짐 | 채널별 로직이 **각 클래스에 격리** (SRP) |
+| **변경 파급** | 한 채널 수정이 다른 채널과 같은 파일에 있어 사이드이펙트 위험 | 한 채널 클래스만 건드림 → **격리된 변경** |
+| **테스트** | 거대한 분기 메서드를 통째로 테스트 | 발송기 단위로 **독립 테스트** 가능 |
+| **의존성 주입** | 채널별 클라이언트(카카오/이메일 SDK)를 한 클래스에 다 주입 → 결합↑ | 각 발송기가 자기 것만 주입 → **결합 최소** |
+
+- **핵심 차이**: if-else는 "채널이 늘 때마다 **기존 코드를 여는(수정)**" 구조라 채널 수에 비례해 분기문·의존성·테스트 부담이 커진다. 전략 패턴은 "**닫힌 코드에 새 구현을 더하는(확장)**" 구조라 채널이 늘어도 기존 코드는 그대로다(OCP).
+- Spring이 `List<NotificationSender>`로 구현체를 **자동 수집**해 Resolver가 `채널→발송기` 맵을 구성하므로, 새 채널은 `@Component` 클래스 하나 추가로 자동 편입된다. Consumer/Resolver는 **구체 발송기를 전혀 몰라도** 된다.
+- 지금은 Mock(콘솔 로그)이지만, 실제 API 연동으로 바뀌어도 각 발송기 내부만 교체하면 되고 **호출 구조는 불변**이다.
 
 ---
 
