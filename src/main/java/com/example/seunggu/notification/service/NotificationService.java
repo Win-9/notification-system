@@ -40,8 +40,10 @@ public class NotificationService {
         RBucket<String> marker = redissonClient.getBucket(IDEM_PREFIX + key);
         boolean first = marker.setIfAbsent("PROCESSING", IDEM_TTL);
         if (!first) {
-            // 이미 처리됐거나 처리 중 → 중복
-            throw new DuplicateRequestException("이미 처리된(또는 처리 중인) 요청입니다: " + key);
+            // DB에 값이 존재한다면 처리완료 요청으로 응답
+            return repository.findByIdempotencyKey(key)
+                    .map(NotificationResponse::from)
+                    .orElseThrow(() -> new DuplicateRequestException("처리 중인 요청입니다: " + key));
         }
 
         try {
@@ -49,8 +51,9 @@ public class NotificationService {
             return registrar.persist(key, request);
         } catch (DataIntegrityViolationException e) {
             // Redis 마커는 유실됐지만 DB 엔 이미 존재
-            log.info("DB 유니크 제약으로 중복 방지 (Redis 마커 유실 추정) key={}", key);
-            throw new DuplicateRequestException("이미 처리된 요청입니다: " + key);
+            return repository.findByIdempotencyKey(key)
+                    .map(NotificationResponse::from)
+                    .orElseThrow(() -> new DuplicateRequestException("이미 처리된 요청입니다: " + key));
         } catch (RuntimeException e) {
             // 처리 실패 → Redis 마커를 지워 재시도를 허용한다.
             marker.delete();
