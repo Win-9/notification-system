@@ -1,82 +1,58 @@
 package com.example.seunggu.notification.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
- * 알림 엔티티. 상태를 DB(MySQL)에 저장한다.
+ * 알림 도메인 모델. 프레임워크(JPA/스프링)에 의존하지 않는 순수 자바 객체.
+ * 영속 표현은 adapter.out.persistence 의 NotificationJpaEntity 가 담당한다.
  */
-@Entity
-@Table(name = "notification",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_notification_idempotency_key",
-                columnNames = "idempotency_key"))
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Notification {
 
-    /** PK. 알림의 고유 식별자 (자동 증가). */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    /** 알림의 고유 식별자. 저장 전에는 null. */
     private Long id;
 
-    /** 멱등성 키. 같은 요청을 식별해 중복 발송을 막는 값 (유니크 제약). */
-    @Column(name = "idempotency_key", nullable = false, length = 100)
-    private String idempotencyKey;
+    /** 멱등성 키. 같은 요청을 식별해 중복 발송을 막는 값. */
+    private final String idempotencyKey;
 
-    /** 발송 채널. KAKAO / EMAIL / SMS 중 하나 (문자열로 저장). */
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private NotificationChannel channel;
+    /** 발송 채널. KAKAO / EMAIL / SMS. */
+    private final NotificationChannel channel;
 
-    /** 채널에 따라 전화번호·이메일 주소 등 */
-    @Column(nullable = false, length = 200)
-    private String recipient;
+    /** 채널에 따라 전화번호·이메일 주소 등. */
+    private final String recipient;
 
     /** 알림 제목 (선택). */
-    @Column(length = 200)
-    private String title;
+    private final String title;
 
     /** 알림 본문 내용. */
-    @Column(columnDefinition = "TEXT")
-    private String message;
+    private final String message;
 
     /** 처리 상태. PENDING(접수) → SENT(발송 완료) / FAILED(발송 실패). */
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
     private NotificationStatus status;
 
-    /** 접수(생성) 시각. **/
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    /** 접수(생성) 시각. */
+    private final LocalDateTime createdAt;
 
     /** 발송 완료 시각. 발송 전(PENDING/FAILED)에는 null. */
-    @Column(name = "sent_at")
     private LocalDateTime sentAt;
 
-    public Notification(String idempotencyKey,
-                        NotificationChannel channel,
-                        String recipient,
-                        String title,
-                        String message) {
-        this.idempotencyKey = idempotencyKey;
-        this.channel = channel;
-        this.recipient = recipient;
-        this.title = title;
-        this.message = message;
-        this.status = NotificationStatus.PENDING;
-        this.createdAt = LocalDateTime.now();
+    /** 신규 알림 생성. 상태는 PENDING 으로 시작한다. */
+    public static Notification create(String idempotencyKey, NotificationChannel channel,
+                                      String recipient, String title, String message) {
+        return new Notification(null, idempotencyKey, channel, recipient, title, message,
+                NotificationStatus.PENDING, LocalDateTime.now(), null);
+    }
+
+    /** 저장소에서 읽은 데이터를 도메인 객체로 복원한다 (영속성 어댑터 전용). */
+    public static Notification restore(Long id, String idempotencyKey, NotificationChannel channel,
+                                       String recipient, String title, String message,
+                                       NotificationStatus status, LocalDateTime createdAt, LocalDateTime sentAt) {
+        return new Notification(id, idempotencyKey, channel, recipient, title, message,
+                status, createdAt, sentAt);
     }
 
     public void markSent() {
