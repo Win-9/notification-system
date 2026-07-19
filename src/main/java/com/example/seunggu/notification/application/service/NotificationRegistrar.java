@@ -31,7 +31,8 @@ public class NotificationRegistrar {
                 command.getMessage()
         ));
 
-        // 커밋 이후 발송이 트리거되도록 이벤트 발행 (AFTER_COMMIT 리스너).
+        // 발행 예약을 같은 트랜잭션으로 기록 (Outbox INSERT — 알림 저장과 원자적).
+        // 실제 Kafka 발행은 커밋 후 OutboxRelay 가 수행한다.
         eventPort.publishRegistered(saved.getId());
         return NotificationResult.from(saved);
     }

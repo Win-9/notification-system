@@ -11,4 +11,10 @@ public interface SendNotificationUseCase {
 
     /** 재시도 소진 후(DLT) 최종 실패를 확정한다. */
     void markFailed(Long notificationId);
+
+    // 발송 실패 기록
+    void markRetryWait(Long notificationId);
+
+    // 복구 불가
+    void markDead(Long notificationId);
 }

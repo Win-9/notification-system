@@ -4,7 +4,6 @@ import com.example.seunggu.notification.application.port.in.SendNotificationUseC
 import com.example.seunggu.notification.application.port.out.NotificationPersistencePort;
 import com.example.seunggu.notification.application.port.out.SendPort;
 import com.example.seunggu.notification.domain.Notification;
-import com.example.seunggu.notification.domain.NotificationStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,26 +21,19 @@ public class SendNotificationService implements SendNotificationUseCase {
 
     private final NotificationPersistencePort persistencePort;
     private final SendPort sendPort;
+    private final NotificationStatusRecorder recorder;
 
     @Override
-    @Transactional
     public void send(Long notificationId) {
-        Notification notification = persistencePort.findById(notificationId).orElse(null);
+        Notification notification = recorder.startProcessing(notificationId);
         if (notification == null) {
-            log.warn("발송 대상 알림 없음 id={}", notificationId);
-            return;
-        }
-
-        // 멱등 가드: Kafka at-least-once 재전달 시 중복 발송 방지.
-        if (notification.getStatus() == NotificationStatus.SENT) {
-            log.info("이미 발송된 알림 — 건너뜀 id={}", notificationId);
+            log.info("발송 대상 아님 — 건너뜀 id={}", notificationId);
             return;
         }
 
         sendPort.send(notification);
-        notification.markSent();
-        // 도메인-엔티티 분리로 dirty checking 이 없으므로 명시적으로 저장한다.
-        persistencePort.save(notification);
+
+        recorder.recordSent(notificationId);
         log.info("알림 발송 완료 id={}, channel={}", notificationId, notification.getChannel());
     }
 
@@ -56,5 +48,25 @@ public class SendNotificationService implements SendNotificationUseCase {
                 },
                 () -> log.error("[DLT] 알림 없음 id={}", notificationId)
         );
+    }
+
+    @Override
+    @Transactional
+    public void markRetryWait(Long notificationId) {
+        persistencePort.findById(notificationId).ifPresent(n -> {
+            n.markRetryWait();
+            persistencePort.save(n);
+            log.warn("발송 일시 실패 — 재시도 대기 id={}", notificationId);
+        });
+    }
+
+    @Override
+    @Transactional
+    public void markDead(Long notificationId) {
+        persistencePort.findById(notificationId).ifPresent(n -> {
+            n.markDead();
+            persistencePort.save(n);
+            log.error("[DEAD] 복구 불가 — 격리 id={}", notificationId);
+        });
     }
 }
