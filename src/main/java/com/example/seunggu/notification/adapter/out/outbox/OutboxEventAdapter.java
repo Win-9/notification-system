@@ -1,5 +1,7 @@
 package com.example.seunggu.notification.adapter.out.outbox;
 
+import java.util.UUID;
+
 import com.example.seunggu.global.config.KafkaTopicConfig;
 import com.example.seunggu.notification.application.port.out.RegisteredEventPort;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +20,7 @@ public class OutboxEventAdapter implements RegisteredEventPort {
     private final OutboxJpaRepository outboxRepository;
 
     @Override
-    public void publishRegistered(Long notificationId) {
+    public void publishRegistered(UUID notificationId) {
         String id = String.valueOf(notificationId);
         outboxRepository.save(OutboxMessageJpaEntity.create(
                 KafkaTopicConfig.NOTIFICATION_TOPIC, id, id));

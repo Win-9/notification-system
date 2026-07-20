@@ -1,5 +1,7 @@
 package com.example.seunggu.notification.application.service;
 
+import java.util.UUID;
+
 import com.example.seunggu.notification.application.port.in.FindNotificationQuery;
 import com.example.seunggu.notification.application.port.in.NotificationResult;
 import com.example.seunggu.notification.application.port.out.NotificationPersistencePort;
@@ -19,7 +21,7 @@ public class NotificationQueryService implements FindNotificationQuery {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<NotificationResult> findById(Long id) {
+    public Optional<NotificationResult> findById(UUID id) {
         return persistencePort.findById(id).map(NotificationResult::from);
     }
 }

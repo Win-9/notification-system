@@ -1,5 +1,7 @@
 package com.example.seunggu.notification.adapter.out.persistence;
 
+import java.util.UUID;
+
 import com.example.seunggu.global.exception.DuplicateRequestException;
 import com.example.seunggu.notification.application.port.out.NotificationPersistencePort;
 import com.example.seunggu.notification.domain.Notification;
@@ -29,7 +31,7 @@ public class NotificationPersistenceAdapter implements NotificationPersistencePo
     }
 
     @Override
-    public Optional<Notification> findById(Long id) {
+    public Optional<Notification> findById(UUID id) {
         return repository.findById(id).map(NotificationJpaEntity::toDomain);
     }
 

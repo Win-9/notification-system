@@ -1,5 +1,7 @@
 package com.example.seunggu.notification.adapter.in.web.dto;
 
+import java.util.UUID;
+
 import com.example.seunggu.notification.application.port.in.NotificationResult;
 import com.example.seunggu.notification.domain.NotificationChannel;
 import com.example.seunggu.notification.domain.NotificationStatus;
@@ -13,7 +15,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class NotificationResponse {
 
-    private final Long id;
+    private final UUID id;
     private final NotificationChannel channel;
     private final String recipient;
     private final NotificationStatus status;

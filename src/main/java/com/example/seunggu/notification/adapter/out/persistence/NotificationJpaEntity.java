@@ -7,15 +7,15 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.UuidGenerator;
 
 /**
  * 알림의 JPA 영속 표현. 도메인 모델(Notification)과 분리되어
@@ -30,10 +30,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class NotificationJpaEntity {
 
-    /** PK. 알림의 고유 식별자 (자동 증가). */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @UuidGenerator(algorithm = Uuid7Generator.class)
+    private UUID id;
 
     /** 멱등성 키 (유니크 제약 — 중복 방지 최후 방어선). */
     @Column(name = "idempotency_key", nullable = false, length = 100)

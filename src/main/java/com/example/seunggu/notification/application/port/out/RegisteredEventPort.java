@@ -1,5 +1,7 @@
 package com.example.seunggu.notification.application.port.out;
 
+import java.util.UUID;
+
 /**
  * 아웃바운드 포트: 알림 등록 이벤트 발행.
  * 트랜잭션 안에서 호출되며, 구현(adapter.out.outbox)은 발행 예약을
@@ -7,5 +9,5 @@ package com.example.seunggu.notification.application.port.out;
  */
 public interface RegisteredEventPort {
 
-    void publishRegistered(Long notificationId);
+    void publishRegistered(UUID notificationId);
 }

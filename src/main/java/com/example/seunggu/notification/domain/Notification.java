@@ -1,5 +1,7 @@
 package com.example.seunggu.notification.domain;
 
+import java.util.UUID;
+
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -17,7 +19,7 @@ import lombok.Getter;
 public class Notification {
 
     /** 알림의 고유 식별자. 저장 전에는 null. */
-    private Long id;
+    private UUID id;
 
     /** 멱등성 키. 같은 요청을 식별해 중복 발송을 막는 값. */
     private final String idempotencyKey;
@@ -51,7 +53,7 @@ public class Notification {
     }
 
     /** 저장소에서 읽은 데이터를 도메인 객체로 복원한다 (영속성 어댑터 전용). */
-    public static Notification restore(Long id, String idempotencyKey, NotificationChannel channel,
+    public static Notification restore(UUID id, String idempotencyKey, NotificationChannel channel,
                                        String recipient, String title, String message,
                                        NotificationStatus status, LocalDateTime createdAt, LocalDateTime sentAt) {
         return new Notification(id, idempotencyKey, channel, recipient, title, message,
@@ -101,6 +103,6 @@ public class Notification {
             }
         }
         throw new IllegalStateException(
-                "허용되지 않는 상태 전이: %s → %s (알림 id=%d)".formatted(status, target, id));
+                "허용되지 않는 상태 전이: %s → %s (알림 id=%s)".formatted(status, target, id));
     }
 }

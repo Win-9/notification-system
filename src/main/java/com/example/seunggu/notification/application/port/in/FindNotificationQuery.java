@@ -1,5 +1,7 @@
 package com.example.seunggu.notification.application.port.in;
 
+import java.util.UUID;
+
 import java.util.Optional;
 
 /**
@@ -7,5 +9,5 @@ import java.util.Optional;
  */
 public interface FindNotificationQuery {
 
-    Optional<NotificationResult> findById(Long id);
+    Optional<NotificationResult> findById(UUID id);
 }

@@ -1,5 +1,7 @@
 package com.example.seunggu.notification.application.service;
 
+import java.util.UUID;
+
 import com.example.seunggu.notification.application.port.in.SendNotificationUseCase;
 import com.example.seunggu.notification.application.port.out.NotificationPersistencePort;
 import com.example.seunggu.notification.application.port.out.SendPort;
@@ -24,7 +26,7 @@ public class SendNotificationService implements SendNotificationUseCase {
     private final NotificationStatusRecorder recorder;
 
     @Override
-    public void send(Long notificationId) {
+    public void send(UUID notificationId) {
         Notification notification = recorder.startProcessing(notificationId);
         if (notification == null) {
             log.info("발송 대상 아님 — 건너뜀 id={}", notificationId);
@@ -39,7 +41,7 @@ public class SendNotificationService implements SendNotificationUseCase {
 
     @Override
     @Transactional
-    public void markFailed(Long notificationId) {
+    public void markFailed(UUID notificationId) {
         persistencePort.findById(notificationId).ifPresentOrElse(
                 notification -> {
                     notification.markFailed();
@@ -52,7 +54,7 @@ public class SendNotificationService implements SendNotificationUseCase {
 
     @Override
     @Transactional
-    public void markRetryWait(Long notificationId) {
+    public void markRetryWait(UUID notificationId) {
         persistencePort.findById(notificationId).ifPresent(n -> {
             n.markRetryWait();
             persistencePort.save(n);
@@ -62,7 +64,7 @@ public class SendNotificationService implements SendNotificationUseCase {
 
     @Override
     @Transactional
-    public void markDead(Long notificationId) {
+    public void markDead(UUID notificationId) {
         persistencePort.findById(notificationId).ifPresent(n -> {
             n.markDead();
             persistencePort.save(n);

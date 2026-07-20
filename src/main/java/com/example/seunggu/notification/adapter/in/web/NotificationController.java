@@ -1,5 +1,7 @@
 package com.example.seunggu.notification.adapter.in.web;
 
+import java.util.UUID;
+
 import com.example.seunggu.notification.adapter.in.web.dto.NotificationRequest;
 import com.example.seunggu.notification.adapter.in.web.dto.NotificationResponse;
 import com.example.seunggu.notification.application.port.in.FindNotificationQuery;
@@ -38,7 +40,7 @@ public class NotificationController {
 
     /** 알림 상태 조회 (발송 결과 확인용). */
     @GetMapping("/{id}")
-    public ResponseEntity<NotificationResponse> get(@PathVariable Long id) {
+    public ResponseEntity<NotificationResponse> get(@PathVariable UUID id) {
         return ResponseEntity.of(findQuery.findById(id).map(NotificationResponse::from));
     }
 }

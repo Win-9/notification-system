@@ -1,5 +1,7 @@
 package com.example.seunggu.notification.adapter.in.kafka;
 
+import java.util.UUID;
+
 import com.example.seunggu.global.config.KafkaTopicConfig;
 import com.example.seunggu.global.exception.NotificationSendException;
 import com.example.seunggu.notification.application.port.in.SendNotificationUseCase;
@@ -33,7 +35,7 @@ public class NotificationConsumer {
             topics = KafkaTopicConfig.NOTIFICATION_TOPIC,
             groupId = "${spring.kafka.consumer.group-id}")
     public void consume(String notificationId) {
-        Long id = Long.valueOf(notificationId);
+        UUID id = UUID.fromString(notificationId);
         try {
             sendUseCase.send(id);
         } catch (RuntimeException e) {
@@ -48,10 +50,10 @@ public class NotificationConsumer {
                           @Header(name = KafkaHeaders.EXCEPTION_CAUSE_FQCN, required = false) String causeType) {
         log.error("[DLT] 도착 id={}, 원인={}", notificationId, causeType);
 
-        Long id;
+        UUID id;
         try {
-            id = Long.valueOf(notificationId);
-        } catch (NumberFormatException e) {
+            id = UUID.fromString(notificationId);
+        } catch (IllegalArgumentException e) {
             log.error("[DLT] id 파싱 불가 — 마킹 불가, 수동 확인 필요 payload={}", notificationId);
             return;
         }

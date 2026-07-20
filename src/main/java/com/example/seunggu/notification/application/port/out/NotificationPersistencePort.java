@@ -1,5 +1,7 @@
 package com.example.seunggu.notification.application.port.out;
 
+import java.util.UUID;
+
 import com.example.seunggu.notification.domain.Notification;
 import java.util.Optional;
 
@@ -15,7 +17,7 @@ public interface NotificationPersistencePort {
      */
     Notification save(Notification notification);
 
-    Optional<Notification> findById(Long id);
+    Optional<Notification> findById(UUID id);
 
     Optional<Notification> findByIdempotencyKey(String idempotencyKey);
 }

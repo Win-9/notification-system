@@ -1,5 +1,7 @@
 package com.example.seunggu.notification.application.service;
 
+import java.util.UUID;
+
 import com.example.seunggu.notification.application.port.out.NotificationPersistencePort;
 import com.example.seunggu.notification.domain.Notification;
 import com.example.seunggu.notification.domain.NotificationStatus;
@@ -13,7 +15,7 @@ public class NotificationStatusRecorder {
     private final NotificationPersistencePort persistencePort;
 
     @Transactional
-    public Notification startProcessing(Long notificationId) {
+    public Notification startProcessing(UUID notificationId) {
         Notification notification = persistencePort.findById(notificationId).orElse(null);
         if (notification == null) {
             return null;
@@ -31,7 +33,7 @@ public class NotificationStatusRecorder {
 
     /** tx2: 발송 성공 확정 (PROCESSING → SENT). */
     @Transactional
-    public void recordSent(Long notificationId) {
+    public void recordSent(UUID notificationId) {
         persistencePort.findById(notificationId).ifPresent(n -> {
             n.markSent();
             persistencePort.save(n);
