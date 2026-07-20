@@ -2,12 +2,10 @@ package com.example.seunggu.notification.adapter.out.persistence;
 
 import java.util.UUID;
 
-import com.example.seunggu.global.exception.DuplicateRequestException;
 import com.example.seunggu.notification.application.port.out.NotificationPersistencePort;
 import com.example.seunggu.notification.domain.Notification;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 /**
@@ -21,13 +19,7 @@ public class NotificationPersistenceAdapter implements NotificationPersistencePo
 
     @Override
     public Notification save(Notification notification) {
-        try {
-            return repository.save(NotificationJpaEntity.fromDomain(notification)).toDomain();
-        } catch (DataIntegrityViolationException e) {
-            // idempotency_key 유니크 제약 위반 — 기술 예외를 도메인 의미로 번역해 올린다.
-            throw new DuplicateRequestException(
-                    "이미 처리된 요청입니다: " + notification.getIdempotencyKey());
-        }
+        return repository.save(NotificationJpaEntity.fromDomain(notification)).toDomain();
     }
 
     @Override
