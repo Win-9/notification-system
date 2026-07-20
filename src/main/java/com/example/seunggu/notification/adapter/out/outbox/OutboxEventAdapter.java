@@ -2,9 +2,8 @@ package com.example.seunggu.notification.adapter.out.outbox;
 
 import java.util.UUID;
 
-import com.example.seunggu.global.config.KafkaTopicConfig;
 import com.example.seunggu.notification.application.port.out.RegisteredEventPort;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
@@ -14,15 +13,20 @@ import org.springframework.stereotype.Component;
  * 커밋됐는데 발행 기록이 없는 상태가 구조적으로 불가능하다.
  */
 @Component
-@RequiredArgsConstructor
 public class OutboxEventAdapter implements RegisteredEventPort {
 
     private final OutboxJpaRepository outboxRepository;
+    private final String topic;
+
+    public OutboxEventAdapter(OutboxJpaRepository outboxRepository,
+                              @Value("${notification.topic}") String topic) {
+        this.outboxRepository = outboxRepository;
+        this.topic = topic;
+    }
 
     @Override
     public void publishRegistered(UUID notificationId) {
         String id = String.valueOf(notificationId);
-        outboxRepository.save(OutboxMessageJpaEntity.create(
-                KafkaTopicConfig.NOTIFICATION_TOPIC, id, id));
+        outboxRepository.save(OutboxMessageJpaEntity.create(topic, id, id));
     }
 }

@@ -2,7 +2,6 @@ package com.example.seunggu.notification.adapter.in.kafka;
 
 import java.util.UUID;
 
-import com.example.seunggu.global.config.KafkaTopicConfig;
 import com.example.seunggu.global.exception.NotificationSendException;
 import com.example.seunggu.notification.application.port.in.SendNotificationUseCase;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +31,7 @@ public class NotificationConsumer {
             backoff = @Backoff(delay = 2000, multiplier = 2.0)
     )
     @KafkaListener(
-            topics = KafkaTopicConfig.NOTIFICATION_TOPIC,
+            topics = "${notification.topic}",
             groupId = "${spring.kafka.consumer.group-id}")
     public void consume(String notificationId) {
         UUID id = UUID.fromString(notificationId);
