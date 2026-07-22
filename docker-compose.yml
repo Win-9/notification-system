@@ -31,3 +31,38 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+  # ===== 부하 테스트 (profiles: loadtest) =====
+  ngrinder-controller:
+    image: ngrinder/controller:3.5.9-p1
+    platform: linux/amd64   # arm64 이미지가 없어 에뮬레이션으로 실행 (부팅이 매우 느림 — 수 분 소요)
+    container_name: seunggu-ngrinder-controller
+    profiles: ["loadtest"]
+    ports:
+      - "7070:80"          # 웹 UI (admin/admin)
+      - "16001:16001"      # 에이전트 접속
+      - "12000-12009:12000-12009"  # 테스트 실행 통신
+    volumes:
+      - ngrinder-data:/opt/ngrinder-controller
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:80/login || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 300s
+
+  ngrinder-agent:
+    image: ngrinder/agent:3.5.9-p1
+    platform: linux/amd64
+    container_name: seunggu-ngrinder-agent
+    profiles: ["loadtest"]
+    depends_on:
+      ngrinder-controller:
+        condition: service_healthy
+    restart: on-failure
+    command: ["ngrinder-controller:80"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  ngrinder-data:
