@@ -32,7 +32,8 @@ public class NotificationConsumer {
     )
     @KafkaListener(
             topics = "${notification.topic}",
-            groupId = "${spring.kafka.consumer.group-id}")
+            groupId = "${spring.kafka.consumer.group-id}",
+            concurrency = "3")
     public void consume(String notificationId) {
         UUID id = UUID.fromString(notificationId);
         try {
