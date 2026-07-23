@@ -1,0 +1,36 @@
+<svg width="680" viewBox="0 0 680 300" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>2차 부하 테스트 TPS 추이 (concurrency 3)</title>
+<desc>vuser 10, 1분 동안의 TPS 변화 — 초반 워밍업 저점(약 100) 후 후반에 400~530의 고원이 형성되는 곡선. nGrinder 리포트를 재구성한 차트.</desc>
+<style>
+  text { font-family: -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
+  .ts { font-size: 12px; font-weight: 400; fill: #5F5E5A; }
+  .grid { stroke: #D3D1C7; stroke-width: 0.5; stroke-dasharray: 3 3; }
+</style>
+<rect x="0" y="0" width="680" height="300" fill="#FFFFFF"/>
+
+<line x1="60" y1="250" x2="650" y2="250" class="grid"/>
+<line x1="60" y1="195" x2="650" y2="195" class="grid"/>
+<line x1="60" y1="140" x2="650" y2="140" class="grid"/>
+<line x1="60" y1="85" x2="650" y2="85" class="grid"/>
+<text x="52" y="254" class="ts" text-anchor="end">0</text>
+<text x="52" y="199" class="ts" text-anchor="end">150</text>
+<text x="52" y="144" class="ts" text-anchor="end">300</text>
+<text x="52" y="89" class="ts" text-anchor="end">450</text>
+
+<text x="60" y="272" class="ts" text-anchor="middle">00:00</text>
+<text x="137" y="272" class="ts" text-anchor="middle">00:06</text>
+<text x="214" y="272" class="ts" text-anchor="middle">00:12</text>
+<text x="290" y="272" class="ts" text-anchor="middle">00:18</text>
+<text x="367" y="272" class="ts" text-anchor="middle">00:24</text>
+<text x="444" y="272" class="ts" text-anchor="middle">00:30</text>
+<text x="521" y="272" class="ts" text-anchor="middle">00:36</text>
+<text x="598" y="272" class="ts" text-anchor="middle">00:42</text>
+
+<polyline fill="none" stroke="#378ADD" stroke-width="1.5"
+  points="60,198.7 85.6,136.3 111.2,129 136.8,129 162.4,119.8 188,173 213.6,213.3 239.2,200.5 264.8,165.7 290.4,143.7 316,132.7 341.6,127.2 367.2,173 392.8,156.5 418.4,145.5 444,63 469.6,66.7 495.2,101.5 520.8,105.2 546.4,72.2 572,57.5 597.6,127.2 623.2,116.2 648.8,59.3"/>
+
+<circle cx="213.6" cy="213.3" r="3.5" fill="none" stroke="#BA7517" stroke-width="1.5"/>
+<text x="200" y="238" class="ts" fill="#854F0B">저점 ~100 (워밍업 구간)</text>
+<circle cx="572" cy="57.5" r="3.5" fill="none" stroke="#1D9E75" stroke-width="1.5"/>
+<text x="500" y="46" class="ts" fill="#0F6E56">피크 529.5</text>
+</svg>

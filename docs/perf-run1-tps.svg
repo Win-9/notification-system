@@ -1,0 +1,35 @@
+<svg width="680" viewBox="0 0 680 300" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>1차 부하 테스트 TPS 추이</title>
+<desc>vuser 10, 1분 동안의 TPS 변화 — 초반 워밍업 저점(약 70)과 후반 피크(428.5)를 보이는 곡선. nGrinder 리포트를 재구성한 차트.</desc>
+<style>
+  text { font-family: -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
+  .ts { font-size: 12px; font-weight: 400; fill: #5F5E5A; }
+  .grid { stroke: #D3D1C7; stroke-width: 0.5; stroke-dasharray: 3 3; }
+</style>
+<rect x="0" y="0" width="680" height="300" fill="#FFFFFF"/>
+
+<line x1="60" y1="250" x2="650" y2="250" class="grid"/>
+<line x1="60" y1="176.7" x2="650" y2="176.7" class="grid"/>
+<line x1="60" y1="103.3" x2="650" y2="103.3" class="grid"/>
+<line x1="60" y1="30" x2="650" y2="30" class="grid"/>
+<text x="52" y="254" class="ts" text-anchor="end">0</text>
+<text x="52" y="180" class="ts" text-anchor="end">150</text>
+<text x="52" y="107" class="ts" text-anchor="end">300</text>
+<text x="52" y="34" class="ts" text-anchor="end">450</text>
+
+<text x="60" y="272" class="ts" text-anchor="middle">00:00</text>
+<text x="153" y="272" class="ts" text-anchor="middle">00:06</text>
+<text x="246" y="272" class="ts" text-anchor="middle">00:12</text>
+<text x="339" y="272" class="ts" text-anchor="middle">00:18</text>
+<text x="432" y="272" class="ts" text-anchor="middle">00:24</text>
+<text x="525" y="272" class="ts" text-anchor="middle">00:30</text>
+<text x="618" y="272" class="ts" text-anchor="middle">00:36</text>
+
+<polyline fill="none" stroke="#378ADD" stroke-width="1.5"
+  points="60,176.7 91,142.4 122,171.8 153,157.1 184,203.6 215,215.8 246,213.3 277,166.9 308,181.6 339,152.2 370,83.8 401,118.0 432,39.8 463,144.9 494,108.2 525,105.8 556,88.7 587,135.1 618,118.0 649,213.3"/>
+
+<circle cx="215" cy="215.8" r="3.5" fill="none" stroke="#BA7517" stroke-width="1.5"/>
+<text x="205" y="238" class="ts" fill="#854F0B">저점 ~70 (워밍업 구간)</text>
+<circle cx="432" cy="39.8" r="3.5" fill="none" stroke="#1D9E75" stroke-width="1.5"/>
+<text x="444" y="42" class="ts" fill="#0F6E56">피크 428.5</text>
+</svg>
