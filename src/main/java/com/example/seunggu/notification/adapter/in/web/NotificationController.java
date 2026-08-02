@@ -1,5 +1,6 @@
 package com.example.seunggu.notification.adapter.in.web;
 
+import java.util.List;
 import java.util.UUID;
 
 import com.example.seunggu.notification.adapter.in.web.dto.NotificationRequest;
@@ -42,5 +43,17 @@ public class NotificationController {
     @GetMapping("/{id}")
     public ResponseEntity<NotificationResponse> get(@PathVariable UUID id) {
         return ResponseEntity.of(findQuery.findById(id).map(NotificationResponse::from));
+    }
+
+    /** 요청자별 최근 7일 내역 조회 (최신순 페이징). */
+    @GetMapping("/history")
+    public ResponseEntity<List<NotificationResponse>> history(
+            @RequestParam String recipient,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        List<NotificationResponse> body = findQuery.findRecentByRecipient(recipient, page, size).stream()
+                .map(NotificationResponse::from)
+                .toList();
+        return ResponseEntity.ok(body);
     }
 }

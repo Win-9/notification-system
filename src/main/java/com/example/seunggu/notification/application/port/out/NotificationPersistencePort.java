@@ -1,5 +1,7 @@
 package com.example.seunggu.notification.application.port.out;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import com.example.seunggu.notification.domain.Notification;
@@ -20,4 +22,7 @@ public interface NotificationPersistencePort {
     Optional<Notification> findById(UUID id);
 
     Optional<Notification> findByIdempotencyKey(String idempotencyKey);
+
+    /** 수신자별 since 이후 알림을 최신순으로 페이징 조회. page 는 0부터. */
+    List<Notification> findByRecipient(String recipient, LocalDateTime since, int page, int size);
 }

@@ -1,11 +1,14 @@
 package com.example.seunggu.notification.adapter.out.persistence;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import com.example.seunggu.notification.application.port.out.NotificationPersistencePort;
 import com.example.seunggu.notification.domain.Notification;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 /**
@@ -30,5 +33,14 @@ public class NotificationPersistenceAdapter implements NotificationPersistencePo
     @Override
     public Optional<Notification> findByIdempotencyKey(String idempotencyKey) {
         return repository.findByIdempotencyKey(idempotencyKey).map(NotificationJpaEntity::toDomain);
+    }
+
+    @Override
+    public List<Notification> findByRecipient(String recipient, LocalDateTime since, int page, int size) {
+        return repository
+                .findByRecipientAndCreatedAtAfterOrderByCreatedAtDesc(recipient, since, PageRequest.of(page, size))
+                .stream()
+                .map(NotificationJpaEntity::toDomain)
+                .toList();
     }
 }
