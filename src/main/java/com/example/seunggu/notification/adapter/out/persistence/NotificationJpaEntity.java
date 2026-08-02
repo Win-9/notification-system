@@ -3,13 +3,8 @@ package com.example.seunggu.notification.adapter.out.persistence;
 import com.example.seunggu.notification.domain.Notification;
 import com.example.seunggu.notification.domain.NotificationChannel;
 import com.example.seunggu.notification.domain.NotificationStatus;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -25,7 +20,8 @@ import org.hibernate.annotations.UuidGenerator;
 @Table(name = "notification",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_notification_idempotency_key",
-                columnNames = "idempotency_key"))
+                columnNames = "idempotency_key"),
+                indexes = @Index(name = "idx_recipient_created", columnList = "recipient, created_at"))
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class NotificationJpaEntity {
