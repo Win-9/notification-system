@@ -1,0 +1,38 @@
+<svg width="680" viewBox="0 0 680 300" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>3차 부하 테스트 TPS 추이 (HikariCP pool 30)</title>
+<desc>vuser 10, 1분 동안의 TPS 변화 — 초반 워밍업 저점(약 55) 후 후반 450~550 고원과 피크 547을 보이는 곡선. nGrinder 리포트를 재구성한 차트.</desc>
+<style>
+  text { font-family: -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
+  .ts { font-size: 12px; font-weight: 400; fill: #5F5E5A; }
+  .grid { stroke: #D3D1C7; stroke-width: 0.5; stroke-dasharray: 3 3; }
+</style>
+<rect x="0" y="0" width="680" height="300" fill="#FFFFFF"/>
+
+<line x1="60" y1="250" x2="650" y2="250" class="grid"/>
+<line x1="60" y1="195" x2="650" y2="195" class="grid"/>
+<line x1="60" y1="140" x2="650" y2="140" class="grid"/>
+<line x1="60" y1="85" x2="650" y2="85" class="grid"/>
+<line x1="60" y1="30" x2="650" y2="30" class="grid"/>
+<text x="52" y="254" class="ts" text-anchor="end">0</text>
+<text x="52" y="199" class="ts" text-anchor="end">150</text>
+<text x="52" y="144" class="ts" text-anchor="end">300</text>
+<text x="52" y="89" class="ts" text-anchor="end">450</text>
+<text x="52" y="34" class="ts" text-anchor="end">600</text>
+
+<text x="60" y="272" class="ts" text-anchor="middle">00:00</text>
+<text x="140" y="272" class="ts" text-anchor="middle">00:06</text>
+<text x="221" y="272" class="ts" text-anchor="middle">00:12</text>
+<text x="301" y="272" class="ts" text-anchor="middle">00:18</text>
+<text x="382" y="272" class="ts" text-anchor="middle">00:24</text>
+<text x="462" y="272" class="ts" text-anchor="middle">00:30</text>
+<text x="542" y="272" class="ts" text-anchor="middle">00:36</text>
+<text x="623" y="272" class="ts" text-anchor="middle">00:42</text>
+
+<polyline fill="none" stroke="#378ADD" stroke-width="1.5"
+  points="60,182.2 86.8,178.5 113.6,165.7 140.4,145.5 167.2,202.3 194,229.8 220.8,193.2 247.6,173 274.4,130.8 301.2,145.5 328,105.2 354.8,132.7 381.6,70.3 408.4,101.5 435.2,125.3 462,70.3 488.8,70.3 515.6,96 542.4,123.5 569.2,50.2 596,88.7 622.8,70.3 649.6,74"/>
+
+<circle cx="194" cy="229.8" r="3.5" fill="none" stroke="#BA7517" stroke-width="1.5"/>
+<text x="180" y="248" class="ts" fill="#854F0B">저점 ~55 (워밍업 구간)</text>
+<circle cx="569.2" cy="50.2" r="3.5" fill="none" stroke="#1D9E75" stroke-width="1.5"/>
+<text x="500" y="40" class="ts" fill="#0F6E56">피크 547.0</text>
+</svg>
