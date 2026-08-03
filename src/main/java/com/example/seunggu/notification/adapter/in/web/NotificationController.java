@@ -3,6 +3,7 @@ package com.example.seunggu.notification.adapter.in.web;
 import java.util.List;
 import java.util.UUID;
 
+import com.example.seunggu.notification.adapter.in.web.dto.NotificationHistoryResponse;
 import com.example.seunggu.notification.adapter.in.web.dto.NotificationRequest;
 import com.example.seunggu.notification.adapter.in.web.dto.NotificationResponse;
 import com.example.seunggu.notification.application.port.in.FindNotificationQuery;
@@ -45,7 +46,7 @@ public class NotificationController {
         return ResponseEntity.of(findQuery.findById(id).map(NotificationResponse::from));
     }
 
-    /** 요청자별 최근 7일 내역 조회 (최신순 페이징). */
+    /** 요청자별 최근 7일 내역 조회 — offset 페이징 (성능 비교용). */
     @GetMapping("/history")
     public ResponseEntity<List<NotificationResponse>> history(
             @RequestParam String recipient,
@@ -55,5 +56,18 @@ public class NotificationController {
                 .map(NotificationResponse::from)
                 .toList();
         return ResponseEntity.ok(body);
+    }
+
+    /**
+     * 요청자별 최근 7일 내역 조회 — 커서(keyset) 페이징.
+     * 첫 요청은 cursor 생략, 이후 응답의 nextCursor 를 그대로 전달한다.
+     */
+    @GetMapping("/history-cursor")
+    public ResponseEntity<NotificationHistoryResponse> historyByCursor(
+            @RequestParam String recipient,
+            @RequestParam(required = false) UUID cursor,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(NotificationHistoryResponse.from(
+                findQuery.findRecentByRecipientWithCursor(recipient, cursor, size)));
     }
 }

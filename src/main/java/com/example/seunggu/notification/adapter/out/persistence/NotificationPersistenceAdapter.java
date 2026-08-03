@@ -43,4 +43,13 @@ public class NotificationPersistenceAdapter implements NotificationPersistencePo
                 .map(NotificationJpaEntity::toDomain)
                 .toList();
     }
+
+    @Override
+    public List<Notification> findByRecipientWithCursor(String recipient, LocalDateTime since, UUID cursor, int limit) {
+        PageRequest limitOnly = PageRequest.of(0, limit);
+        List<NotificationJpaEntity> rows = (cursor == null)
+                ? repository.findByRecipientAndCreatedAtAfterOrderByIdDesc(recipient, since, limitOnly)
+                : repository.findByRecipientAndCreatedAtAfterAndIdLessThanOrderByIdDesc(recipient, since, cursor, limitOnly);
+        return rows.stream().map(NotificationJpaEntity::toDomain).toList();
+    }
 }
