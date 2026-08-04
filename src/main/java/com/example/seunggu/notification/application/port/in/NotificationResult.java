@@ -32,6 +32,18 @@ public class NotificationResult {
     /** 발송 완료 시각. SENT 가 아니면 null. */
     private final LocalDateTime sentAt;
 
+    /** 발송 시도 횟수. SENT 면 "몇 번째 시도에 성공했는지"를 뜻한다. */
+    private final int attemptCount;
+
+    /** 마지막 시도 시각. */
+    private final LocalDateTime lastAttemptAt;
+
+    /** 마지막 실패 분류 코드 (HTTP_500 · TIMEOUT · CIRCUIT_OPEN · RETRY_EXHAUSTED 등). */
+    private final String lastErrorCode;
+
+    /** 마지막 실패 상세. */
+    private final String lastErrorMessage;
+
     public static NotificationResult from(Notification notification) {
         return new NotificationResult(
                 notification.getId(),
@@ -41,6 +53,10 @@ public class NotificationResult {
                 notification.getMessage(),
                 notification.getStatus(),
                 notification.getCreatedAt(),
-                notification.getSentAt());
+                notification.getSentAt(),
+                notification.getAttemptCount(),
+                notification.getLastAttemptAt(),
+                notification.getLastErrorCode(),
+                notification.getLastErrorMessage());
     }
 }

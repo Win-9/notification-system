@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
@@ -18,7 +19,8 @@ import lombok.NoArgsConstructor;
  * 실제 발행은 {@link OutboxRelay} 가 폴링으로 수행한다 (at-least-once).
  */
 @Entity
-@Table(name = "outbox_message")
+@Table(name = "outbox_message",
+        indexes = @Index(name = "idx_outbox_published_id", columnList = "published, id"))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OutboxMessageJpaEntity {

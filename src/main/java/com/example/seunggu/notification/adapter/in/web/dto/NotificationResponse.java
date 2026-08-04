@@ -31,6 +31,18 @@ public class NotificationResponse {
     /** 발송 완료 시각. SENT 가 아니면 null. */
     private final LocalDateTime sentAt;
 
+    /** 발송 시도 횟수. */
+    private final int attemptCount;
+
+    /** 마지막 시도 시각. */
+    private final LocalDateTime lastAttemptAt;
+
+    /** 마지막 실패 분류 코드. */
+    private final String lastErrorCode;
+
+    /** 마지막 실패 상세. */
+    private final String lastErrorMessage;
+
     public static NotificationResponse from(NotificationResult result) {
         return new NotificationResponse(
                 result.getId(),
@@ -40,7 +52,11 @@ public class NotificationResponse {
                 result.getMessage(),
                 result.getStatus(),
                 result.getCreatedAt(),
-                result.getSentAt()
+                result.getSentAt(),
+                result.getAttemptCount(),
+                result.getLastAttemptAt(),
+                result.getLastErrorCode(),
+                result.getLastErrorMessage()
         );
     }
 }

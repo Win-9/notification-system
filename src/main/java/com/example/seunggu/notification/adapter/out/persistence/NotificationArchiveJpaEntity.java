@@ -50,6 +50,19 @@ public class NotificationArchiveJpaEntity {
     @Column(name = "sent_at")
     private LocalDateTime sentAt;
 
+    /** 발송 이력 — 이관 시에도 보존해야 사후 원인 분석이 가능하다. */
+    @Column(name = "attempt_count", nullable = false)
+    private int attemptCount;
+
+    @Column(name = "last_attempt_at")
+    private LocalDateTime lastAttemptAt;
+
+    @Column(name = "last_error_code", length = 50)
+    private String lastErrorCode;
+
+    @Column(name = "last_error_message", length = 500)
+    private String lastErrorMessage;
+
     /** 아카이브로 이관된 시각 (운영 추적용). */
     @Column(name = "archived_at", nullable = false, updatable = false)
     private LocalDateTime archivedAt;

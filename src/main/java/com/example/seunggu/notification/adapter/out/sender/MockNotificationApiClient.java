@@ -32,7 +32,11 @@ public class MockNotificationApiClient {
     }
 
     private void sendFallback(Notification notification, Throwable t) {
-        log.warn("Mock Send API 호출 실패/차단 — id={}, cause={}", notification.getId(), t.toString());
-        throw new NotificationSendException("Mock Send API 호출 실패 id=" + notification.getId(), t);
+        // 실패 원인 분류는 프로토콜 지식이므로 어댑터에서 수행하고, 코어에는 코드 문자열만 전달한다.
+        String errorCode = SendErrorClassifier.classify(t);
+        log.warn("Mock Send API 호출 실패/차단 — id={}, code={}, cause={}",
+                notification.getId(), errorCode, t.toString());
+        throw new NotificationSendException(errorCode,
+                "Mock Send API 호출 실패 id=" + notification.getId() + " (" + t.getMessage() + ")", t);
     }
 }

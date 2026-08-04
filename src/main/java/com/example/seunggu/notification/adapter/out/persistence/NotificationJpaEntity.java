@@ -57,6 +57,22 @@ public class NotificationJpaEntity {
     @Column(name = "sent_at")
     private LocalDateTime sentAt;
 
+    /** 발송 시도 횟수 (PROCESSING 전이마다 증가). */
+    @Column(name = "attempt_count", nullable = false)
+    private int attemptCount;
+
+    /** 마지막 시도 시각. */
+    @Column(name = "last_attempt_at")
+    private LocalDateTime lastAttemptAt;
+
+    /** 마지막 실패 분류 코드 (HTTP_500, TIMEOUT, CIRCUIT_OPEN 등). */
+    @Column(name = "last_error_code", length = 50)
+    private String lastErrorCode;
+
+    /** 마지막 실패 상세 메시지. */
+    @Column(name = "last_error_message", length = 500)
+    private String lastErrorMessage;
+
     static NotificationJpaEntity fromDomain(Notification notification) {
         return new NotificationJpaEntity(
                 notification.getId(),
@@ -67,12 +83,17 @@ public class NotificationJpaEntity {
                 notification.getMessage(),
                 notification.getStatus(),
                 notification.getCreatedAt(),
-                notification.getSentAt()
+                notification.getSentAt(),
+                notification.getAttemptCount(),
+                notification.getLastAttemptAt(),
+                notification.getLastErrorCode(),
+                notification.getLastErrorMessage()
         );
     }
 
     Notification toDomain() {
         return Notification.restore(id, idempotencyKey, channel, recipient, title, message,
-                status, createdAt, sentAt);
+                status, createdAt, sentAt,
+                attemptCount, lastAttemptAt, lastErrorCode, lastErrorMessage);
     }
 }

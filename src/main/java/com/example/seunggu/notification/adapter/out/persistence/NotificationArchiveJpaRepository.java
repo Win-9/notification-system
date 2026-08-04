@@ -15,8 +15,10 @@ public interface NotificationArchiveJpaRepository extends JpaRepository<Notifica
     @Modifying
     @Query(value = """
             INSERT INTO notification_archive
-                (id, idempotency_key, channel, recipient, title, message, status, created_at, sent_at, archived_at)
-            SELECT id, idempotency_key, channel, recipient, title, message, status, created_at, sent_at, NOW()
+                (id, idempotency_key, channel, recipient, title, message, status, created_at, sent_at,
+                 attempt_count, last_attempt_at, last_error_code, last_error_message, archived_at)
+            SELECT id, idempotency_key, channel, recipient, title, message, status, created_at, sent_at,
+                 attempt_count, last_attempt_at, last_error_code, last_error_message, NOW()
             FROM notification
             WHERE created_at < :threshold
               AND status IN ('SENT', 'FAILED', 'DEAD')
