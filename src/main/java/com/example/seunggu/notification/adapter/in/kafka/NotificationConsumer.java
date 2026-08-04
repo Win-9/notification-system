@@ -27,8 +27,11 @@ public class NotificationConsumer {
     private final SendNotificationUseCase sendUseCase;
 
     @RetryableTopic(
-            attempts = "5",
-            backoff = @Backoff(delay = 2000, multiplier = 2.0)
+            attempts = "${notification.retry.attempts:5}",
+            backoff = @Backoff(
+                    delayExpression = "${notification.retry.delay:2000}",
+                    multiplierExpression = "${notification.retry.multiplier:3.0}",
+                    maxDelayExpression = "${notification.retry.max-delay:60000}")
     )
     @KafkaListener(
             topics = "${notification.topic}",
