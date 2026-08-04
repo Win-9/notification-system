@@ -6,6 +6,9 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface NotificationJpaRepository extends JpaRepository<NotificationJpaEntity, UUID> {
 
@@ -26,4 +29,21 @@ public interface NotificationJpaRepository extends JpaRepository<NotificationJpa
      */
     List<NotificationJpaEntity> findByRecipientAndCreatedAtAfterAndIdLessThanOrderByIdDesc(
             String recipient, LocalDateTime createdAt, UUID cursor, Pageable pageable);
+
+    /**
+     * 아카이브로 이관 완료된 행만 핫 테이블에서 제거한다.
+     * EXISTS 조건으로 "아카이브에 실제로 존재함"을 확인하므로,
+     * 복사가 누락된 행이 삭제되는 일이 구조적으로 불가능하다.
+     */
+    @Modifying
+    @Query(value = """
+            DELETE FROM notification
+            WHERE created_at < :threshold
+              AND status IN ('SENT', 'FAILED', 'DEAD')
+              AND EXISTS (SELECT 1 FROM notification_archive a WHERE a.id = notification.id)
+            LIMIT :chunkSize
+            """, nativeQuery = true)
+    int deleteArchivedChunk(@Param("threshold") LocalDateTime threshold, @Param("chunkSize") int chunkSize);
+
+    long countByCreatedAtBefore(LocalDateTime threshold);
 }
