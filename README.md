@@ -28,6 +28,7 @@ v2에서 발송 파이프라인의 신뢰성을 확보한 뒤, 이번에는 **�
 | **누적 데이터 관리** | 6개월 경과분 **아카이브 이관**(삭제 아님) 배치 | [3.4](#34-누적-데이터-관리--아카이빙-이관) |
 | **회복 탄력성** | **서킷브레이커** + 재시도 backoff 재설계 | [3.5](#35-서킷브레이커--지속-장애에서의-fail-fast) · [3.6](#36-재시도-backoff-재설계--서킷과의-상호작용) |
 | **Outbox 릴레이 신뢰성** | 전면 정지 위험 제거(`continue`) · **`SKIP LOCKED`** 로 다중 인스턴스 중복 제거 · 조회 인덱스 | [3.7](#37-outbox-릴레이-신뢰성--전면-정지-위험과-다중-인스턴스-중복-제거) |
+| **발송 이력 기록** | `attemptCount` · `lastErrorCode` · `lastAttemptAt` 로 **원인 추적을 로그에서 DB 로** | [3.8](#38-발송-이력-기록--몇-번-왜-실패했는가를-조회로-답한다) |
 
 ---
 
@@ -341,7 +342,8 @@ HALF_OPEN_TO_OPEN  시험 3건 중 2건 실패 → 1초 만에 재차단
 ```
 GET /notifications/history?recipient=010-1234-5678&page=0&size=20
 → 200 [ { "id":"019f...", "channel":"KAKAO", "recipient":"...", "title":"...", "message":"...",
-          "status":"SENT", "createdAt":"...", "sentAt":"..." }, ... ]
+          "status":"SENT", "createdAt":"...", "sentAt":"...",
+          "attemptCount":2, "lastAttemptAt":"...", "lastErrorCode":"HTTP_503", "lastErrorMessage":"..." }, ... ]
 ```
 
 ### 요청자별 최근 7일 내역 — 커서 페이징
@@ -405,6 +407,7 @@ v2 의 nGrinder 측정(등록 TPS·Consumer 동시성)은 [docs/README-v2.md](do
 | 커서의 깊이 독립성 (3.3) | 첫 페이지 0.02ms ≈ 26,000번째 지점 0.033ms |
 | 서킷 차단 효과 (3.5) | OPEN 구간에서 **약 2,000건** 외부 호출 회피 |
 | backoff 조정 (3.6) | FAILED 확정 30초 → 80초 지연, RETRY_WAIT 3,786건 생존, SENT 구제 관측 |
+| 발송 이력 (3.8) | 서킷 OPEN 상태에서 `attemptCount=3`, `lastErrorCode=CIRCUIT_OPEN` 이 조회 API 로 확인 — 로그 없이 원인 추적 |
 | Outbox 릴레이 (3.7) | 실패 1건이 배치 전체를 막지 않음 · `(published, id)` 인덱스로 매초 풀스캔 제거 · `SKIP LOCKED` 로 인스턴스 간 구간 분리 |
 
 
