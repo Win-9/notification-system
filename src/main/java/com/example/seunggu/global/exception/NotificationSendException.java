@@ -7,7 +7,17 @@ package com.example.seunggu.global.exception;
  */
 public class NotificationSendException extends RuntimeException {
 
-    public NotificationSendException(String message, Throwable cause) {
+    /** 분류 불가 또는 예외 정보가 없을 때의 기본 코드. */
+    public static final String UNKNOWN = "UNKNOWN";
+
+    private final String errorCode;
+
+    public NotificationSendException(String errorCode, String message, Throwable cause) {
         super(message, cause);
+        this.errorCode = errorCode == null ? UNKNOWN : errorCode;
+    }
+
+    public String getErrorCode() {
+        return errorCode;
     }
 }

@@ -1,0 +1,126 @@
+<svg width="680" viewBox="0 0 680 660" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>알림 발송 시스템 아키텍처 v3</title>
+<desc>등록 시 Redis 멱등 판별과 MySQL 원자 저장을 거치고, Outbox 릴레이가 Kafka로 발행하며, Consumer가 서킷브레이커를 통해 Mock Send API를 호출하고, 조회는 커서 페이징과 복합 인덱스로, 오래된 데이터는 아카이브로 이관되는 구조</desc>
+<style>
+  text { font-family: -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
+  .th { font-size: 14px; font-weight: 500; }
+  .ts { font-size: 12px; font-weight: 400; }
+  .arr { stroke: #5F5E5A; stroke-width: 1.5; fill: none; }
+  .purple rect { fill: #EEEDFE; stroke: #534AB7; stroke-width: 0.5; }
+  .purple .th { fill: #3C3489; } .purple .ts { fill: #534AB7; }
+  .teal rect { fill: #E1F5EE; stroke: #0F6E56; stroke-width: 0.5; }
+  .teal .th { fill: #085041; } .teal .ts { fill: #0F6E56; }
+  .coral rect { fill: #FAECE7; stroke: #993C1D; stroke-width: 0.5; }
+  .coral .th { fill: #712B13; } .coral .ts { fill: #993C1D; }
+  .gray rect { fill: #F1EFE8; stroke: #5F5E5A; stroke-width: 0.5; }
+  .gray .th { fill: #444441; } .gray .ts { fill: #5F5E5A; }
+  .amber rect { fill: #FAEEDA; stroke: #854F0B; stroke-width: 0.5; }
+  .amber .th { fill: #633806; } .amber .ts { fill: #854F0B; }
+  .plain { fill: #444441; }
+</style>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+<rect x="0" y="0" width="680" height="660" fill="#FFFFFF"/>
+
+<text x="40" y="28" class="ts plain">등록 · 조회 (동기)</text>
+
+<g class="gray">
+  <rect x="40" y="40" width="120" height="52" rx="4"/>
+  <text x="100" y="58" class="th" text-anchor="middle" dominant-baseline="central">클라이언트</text>
+  <text x="100" y="76" class="ts" text-anchor="middle" dominant-baseline="central">Idempotency-Key</text>
+</g>
+<line x1="160" y1="66" x2="208" y2="66" class="arr" marker-end="url(#arrow)"/>
+
+<g class="purple">
+  <rect x="210" y="34" width="190" height="64" rx="4"/>
+  <text x="305" y="55" class="th" text-anchor="middle" dominant-baseline="central">알림 서버</text>
+  <text x="305" y="76" class="ts" text-anchor="middle" dominant-baseline="central">멱등 판별 · 재생 · 조회</text>
+</g>
+
+<g class="teal">
+  <rect x="470" y="34" width="170" height="52" rx="4"/>
+  <text x="555" y="52" class="th" text-anchor="middle" dominant-baseline="central">Redis</text>
+  <text x="555" y="70" class="ts" text-anchor="middle" dominant-baseline="central">SETNX 마커 · TTL</text>
+</g>
+<line x1="400" y1="56" x2="468" y2="56" class="arr" marker-end="url(#arrow)"/>
+
+<line x1="305" y1="98" x2="305" y2="128" class="arr" marker-end="url(#arrow)"/>
+<g class="teal">
+  <rect x="210" y="130" width="190" height="86" rx="4"/>
+  <text x="305" y="150" class="th" text-anchor="middle" dominant-baseline="central">MySQL</text>
+  <text x="305" y="170" class="ts" text-anchor="middle" dominant-baseline="central">notification + outbox</text>
+  <text x="305" y="188" class="ts" text-anchor="middle" dominant-baseline="central">한 트랜잭션(원자) 저장</text>
+  <text x="305" y="206" class="ts" text-anchor="middle" dominant-baseline="central">복합 인덱스 · 커서 조회</text>
+</g>
+
+<g class="gray">
+  <rect x="470" y="140" width="170" height="66" rx="4"/>
+  <text x="555" y="160" class="th" text-anchor="middle" dominant-baseline="central">아카이브 배치</text>
+  <text x="555" y="180" class="ts" text-anchor="middle" dominant-baseline="central">6개월 경과 · 월 1회</text>
+  <text x="555" y="196" class="ts" text-anchor="middle" dominant-baseline="central">notification_archive</text>
+</g>
+<line x1="400" y1="173" x2="468" y2="173" class="arr" marker-end="url(#arrow)"/>
+
+<line x1="305" y1="216" x2="305" y2="246" class="arr" marker-end="url(#arrow)"/>
+<g class="purple">
+  <rect x="210" y="248" width="190" height="52" rx="4"/>
+  <text x="305" y="266" class="th" text-anchor="middle" dominant-baseline="central">Outbox 릴레이</text>
+  <text x="305" y="284" class="ts" text-anchor="middle" dominant-baseline="central">1초 폴링 · ack 후 마킹</text>
+</g>
+
+<line x1="305" y1="300" x2="305" y2="330" class="arr" marker-end="url(#arrow)"/>
+<rect x="40" y="332" width="410" height="118" rx="4" fill="none" stroke="#B4B2A9" stroke-width="0.5" stroke-dasharray="4 3"/>
+<text x="52" y="350" class="th plain" dominant-baseline="central">Kafka</text>
+
+<g class="coral">
+  <rect x="60" y="370" width="112" height="56" rx="4"/>
+  <text x="116" y="389" class="th" text-anchor="middle" dominant-baseline="central">WORK</text>
+  <text x="116" y="407" class="ts" text-anchor="middle" dominant-baseline="central">기본 발송</text>
+</g>
+<g class="coral">
+  <rect x="188" y="370" width="112" height="56" rx="4"/>
+  <text x="244" y="389" class="th" text-anchor="middle" dominant-baseline="central">WAIT</text>
+  <text x="244" y="407" class="ts" text-anchor="middle" dominant-baseline="central">2·6·18·54초</text>
+</g>
+<g class="coral">
+  <rect x="316" y="370" width="112" height="56" rx="4"/>
+  <text x="372" y="389" class="th" text-anchor="middle" dominant-baseline="central">DEAD</text>
+  <text x="372" y="407" class="ts" text-anchor="middle" dominant-baseline="central">DLT 격리</text>
+</g>
+<line x1="172" y1="398" x2="186" y2="398" class="arr" marker-end="url(#arrow)"/>
+<line x1="300" y1="398" x2="314" y2="398" class="arr" marker-end="url(#arrow)"/>
+
+<line x1="240" y1="450" x2="240" y2="486" class="arr" marker-end="url(#arrow)"/>
+<g class="purple">
+  <rect x="150" y="488" width="190" height="64" rx="4"/>
+  <text x="245" y="509" class="th" text-anchor="middle" dominant-baseline="central">Consumer</text>
+  <text x="245" y="530" class="ts" text-anchor="middle" dominant-baseline="central">concurrency 3 · 멱등 가드</text>
+</g>
+
+<line x1="340" y1="520" x2="388" y2="520" class="arr" marker-end="url(#arrow)"/>
+<g class="amber">
+  <rect x="390" y="488" width="120" height="64" rx="4"/>
+  <text x="450" y="509" class="th" text-anchor="middle" dominant-baseline="central">서킷브레이커</text>
+  <text x="450" y="530" class="ts" text-anchor="middle" dominant-baseline="central">실패율 50% · 30초</text>
+</g>
+<line x1="510" y1="520" x2="548" y2="520" class="arr" marker-end="url(#arrow)"/>
+<g class="gray">
+  <rect x="550" y="488" width="90" height="64" rx="4"/>
+  <text x="595" y="509" class="th" text-anchor="middle" dominant-baseline="central">Mock API</text>
+  <text x="595" y="530" class="ts" text-anchor="middle" dominant-baseline="central">:8081</text>
+</g>
+
+<path d="M150 504 L120 504 L120 173 L208 173" class="arr" marker-end="url(#arrow)"/>
+<text x="60" y="300" class="ts plain">상태 갱신</text>
+
+<g class="purple"><rect x="40" y="608" width="12" height="12" rx="2"/></g>
+<text x="60" y="614" class="ts plain" dominant-baseline="central">애플리케이션</text>
+<g class="teal"><rect x="160" y="608" width="12" height="12" rx="2"/></g>
+<text x="180" y="614" class="ts plain" dominant-baseline="central">데이터 저장소</text>
+<g class="coral"><rect x="290" y="608" width="12" height="12" rx="2"/></g>
+<text x="310" y="614" class="ts plain" dominant-baseline="central">Kafka 토픽</text>
+<g class="amber"><rect x="400" y="608" width="12" height="12" rx="2"/></g>
+<text x="420" y="614" class="ts plain" dominant-baseline="central">회복 탄력성</text>
+<g class="gray"><rect x="510" y="608" width="12" height="12" rx="2"/></g>
+<text x="530" y="614" class="ts plain" dominant-baseline="central">외부 · 배치</text>
+</svg>

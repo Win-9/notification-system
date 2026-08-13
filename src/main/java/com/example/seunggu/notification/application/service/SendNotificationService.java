@@ -14,7 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * 알림 발송 유스케이스. Kafka Consumer(인바운드 어댑터)가 호출한다.
  * 발송 실패 시 예외를 전파해 재시도(WAIT 토픽)를 유도하고,
- * 재시도 소진 시 DLT 핸들러가 markFailed 로 최종 실패를 확정한다.
+ * 재시도 소진 시 DLT 핸들러가 markFailed / markDead 로 최종 상태를 확정한다.
+ *
  */
 @Slf4j
 @Service
@@ -36,17 +37,30 @@ public class SendNotificationService implements SendNotificationUseCase {
         sendPort.send(notification);
 
         recorder.recordSent(notificationId);
-        log.info("알림 발송 완료 id={}, channel={}", notificationId, notification.getChannel());
+        log.info("알림 발송 완료 id={}, channel={}, attempt={}",
+                notificationId, notification.getChannel(), notification.getAttemptCount());
     }
 
     @Override
     @Transactional
-    public void markFailed(UUID notificationId) {
+    public void markRetryWait(UUID notificationId, String errorCode, String errorMessage) {
+        persistencePort.findById(notificationId).ifPresent(n -> {
+            n.markRetryWait(errorCode, errorMessage);
+            persistencePort.save(n);
+            log.warn("발송 일시 실패 — 재시도 대기 id={}, attempt={}, code={}",
+                    notificationId, n.getAttemptCount(), errorCode);
+        });
+    }
+
+    @Override
+    @Transactional
+    public void markFailed(UUID notificationId, String errorCode, String errorMessage) {
         persistencePort.findById(notificationId).ifPresentOrElse(
                 notification -> {
-                    notification.markFailed();
+                    notification.markFailed(errorCode, errorMessage);
                     persistencePort.save(notification);
-                    log.error("[DLT] 최종 발송 실패 — 격리됨 id={}", notificationId);
+                    log.error("[DLT] 최종 발송 실패 id={}, attempt={}, code={}",
+                            notificationId, notification.getAttemptCount(), errorCode);
                 },
                 () -> log.error("[DLT] 알림 없음 id={}", notificationId)
         );
@@ -54,21 +68,12 @@ public class SendNotificationService implements SendNotificationUseCase {
 
     @Override
     @Transactional
-    public void markRetryWait(UUID notificationId) {
+    public void markDead(UUID notificationId, String errorCode, String errorMessage) {
         persistencePort.findById(notificationId).ifPresent(n -> {
-            n.markRetryWait();
+            n.markDead(errorCode, errorMessage);
             persistencePort.save(n);
-            log.warn("발송 일시 실패 — 재시도 대기 id={}", notificationId);
-        });
-    }
-
-    @Override
-    @Transactional
-    public void markDead(UUID notificationId) {
-        persistencePort.findById(notificationId).ifPresent(n -> {
-            n.markDead();
-            persistencePort.save(n);
-            log.error("[DEAD] 복구 불가 — 격리 id={}", notificationId);
+            log.error("[DEAD] 복구 불가 — 격리 id={}, attempt={}, code={}",
+                    notificationId, n.getAttemptCount(), errorCode);
         });
     }
 }
