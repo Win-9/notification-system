@@ -20,6 +20,7 @@ public class NotificationStatusRecorder {
         if (notification == null) {
             return null;
         }
+
         // 멱등 가드: 이미 끝났거나 확정된 알림은 재전달돼도 건드리지 않는다.
         NotificationStatus status = notification.getStatus();
         if (status == NotificationStatus.SENT

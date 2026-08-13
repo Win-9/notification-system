@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.example.seunggu.notification.application.port.in.NotificationResult;
+import com.example.seunggu.notification.application.service.NotificationStatusView;
 import com.example.seunggu.notification.domain.NotificationChannel;
 import com.example.seunggu.notification.domain.NotificationStatus;
 import lombok.AllArgsConstructor;
@@ -23,7 +24,7 @@ public class NotificationResponse {
     private final String message;
 
     /** 발송 결과 — PENDING/PROCESSING/SENT/RETRY_WAIT/FAILED/DEAD */
-    private final NotificationStatus status;
+    private final NotificationStatusView status;
 
     /** 접수 시각. */
     private final LocalDateTime createdAt;
@@ -50,7 +51,7 @@ public class NotificationResponse {
                 result.getRecipient(),
                 result.getTitle(),
                 result.getMessage(),
-                result.getStatus(),
+                NotificationStatusView.changeStatusFromDb(result.getStatus()),
                 result.getCreatedAt(),
                 result.getSentAt(),
                 result.getAttemptCount(),
