@@ -4,9 +4,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.example.seunggu.notification.application.port.in.NotificationResult;
-import com.example.seunggu.notification.application.service.NotificationStatusView;
 import com.example.seunggu.notification.domain.NotificationChannel;
-import com.example.seunggu.notification.domain.NotificationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -23,13 +21,13 @@ public class NotificationResponse {
     private final String title;
     private final String message;
 
-    /** 발송 결과 — PENDING/PROCESSING/SENT/RETRY_WAIT/FAILED/DEAD */
+    /** 발송 결과 — PENDING(진행 중) / SUCCESS / FAIL. 내부 6단계를 축약한 값이다. */
     private final NotificationStatusView status;
 
     /** 접수 시각. */
     private final LocalDateTime createdAt;
 
-    /** 발송 완료 시각. SENT 가 아니면 null. */
+    /** 발송 완료 시각. SUCCESS 가 아니면 null. */
     private final LocalDateTime sentAt;
 
     /** 발송 시도 횟수. */
@@ -51,7 +49,7 @@ public class NotificationResponse {
                 result.getRecipient(),
                 result.getTitle(),
                 result.getMessage(),
-                NotificationStatusView.changeStatusFromDb(result.getStatus()),
+                NotificationStatusView.from(result.getStatus()),
                 result.getCreatedAt(),
                 result.getSentAt(),
                 result.getAttemptCount(),
