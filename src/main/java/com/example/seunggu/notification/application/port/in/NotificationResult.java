@@ -3,6 +3,7 @@ package com.example.seunggu.notification.application.port.in;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.example.seunggu.notification.adapter.in.web.dto.NotificationStatusView;
 import com.example.seunggu.notification.domain.Notification;
 import com.example.seunggu.notification.domain.NotificationChannel;
 import com.example.seunggu.notification.domain.NotificationStatus;
@@ -24,7 +25,7 @@ public class NotificationResult {
     private final String message;
 
     /** 발송 결과 — 처리 상태. */
-    private final NotificationStatus status;
+    private final NotificationStatusView status;
 
     /** 접수 시각. */
     private final LocalDateTime createdAt;
@@ -51,7 +52,7 @@ public class NotificationResult {
                 notification.getRecipient(),
                 notification.getTitle(),
                 notification.getMessage(),
-                notification.getStatus(),
+                NotificationStatusView.from(notification.getStatus()),
                 notification.getCreatedAt(),
                 notification.getSentAt(),
                 notification.getAttemptCount(),

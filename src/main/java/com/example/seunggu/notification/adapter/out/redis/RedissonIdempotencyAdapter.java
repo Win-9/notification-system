@@ -2,6 +2,9 @@ package com.example.seunggu.notification.adapter.out.redis;
 
 import com.example.seunggu.notification.application.port.out.IdempotencyPort;
 import java.time.Duration;
+
+import io.lettuce.core.RedisException;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +16,7 @@ import org.springframework.stereotype.Component;
  * 키 프리픽스·TTL 은 application.properties 의 notification.idem.* 로 설정한다.
  */
 @Component
+@Slf4j
 public class RedissonIdempotencyAdapter implements IdempotencyPort {
 
     private final RedissonClient redissonClient;
@@ -29,7 +33,12 @@ public class RedissonIdempotencyAdapter implements IdempotencyPort {
 
     @Override
     public boolean tryClaim(String key) {
-        return bucket(key).setIfAbsent("PROCESSING", ttl);
+        try {
+            return bucket(key).setIfAbsent("PROCESSING", ttl);
+        } catch (RedisException e) {
+            log.warn("멱등성 점령 실패 -> DB 제약으로 이동 - key = {}", key);
+            return true;
+        }
     }
 
     @Override

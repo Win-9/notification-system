@@ -17,11 +17,6 @@ public enum NotificationStatusView {
     /** 발송 실패 (종결). */
     FAIL;
 
-    /**
-     * 도메인 상태를 공개 표현으로 변환한다.
-     * <p>{@code default} 를 두지 않는다 — 상태가 추가되면 컴파일 에러로 드러나야 하고,
-     * 그렇지 않으면 새 상태가 조용히 {@code PENDING} 으로 새어나가 클라이언트가 무한 폴링한다.
-     */
     public static NotificationStatusView from(NotificationStatus status) {
         return switch (status) {
             case PENDING, PROCESSING, RETRY_WAIT -> PENDING;
