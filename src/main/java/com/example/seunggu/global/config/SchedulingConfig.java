@@ -6,29 +6,30 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
-/**
- * 스케줄러 활성화 (Outbox 릴레이 폴링용).
- */
+
 @Configuration
 @EnableScheduling
 public class SchedulingConfig {
 
     @Bean("outboxScheduler")
     public TaskScheduler outboxScheduler() {
-        ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
-        threadPoolTaskScheduler.setPoolSize(1);
-        threadPoolTaskScheduler.setThreadNamePrefix("outbox-");
-        threadPoolTaskScheduler.initialize();
-        return threadPoolTaskScheduler;
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setPoolSize(1);
+        scheduler.setThreadNamePrefix("outbox-");
+        scheduler.setWaitForTasksToCompleteOnShutdown(true);
+        scheduler.setAwaitTerminationSeconds(10);
+        scheduler.initialize();
+        return scheduler;
     }
 
-    @Bean("achiveScheduler")
-    public TaskScheduler achiveScheduler() {
-        ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
-        threadPoolTaskScheduler.setPoolSize(1);
-        threadPoolTaskScheduler.setThreadNamePrefix("achive-");
-        threadPoolTaskScheduler.initialize();
-        return threadPoolTaskScheduler;
+    @Bean("archiveScheduler")
+    public TaskScheduler archiveScheduler() {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setPoolSize(1);
+        scheduler.setThreadNamePrefix("archive-");
+        scheduler.setWaitForTasksToCompleteOnShutdown(true);
+        scheduler.setAwaitTerminationSeconds(60);
+        scheduler.initialize();
+        return scheduler;
     }
-
 }

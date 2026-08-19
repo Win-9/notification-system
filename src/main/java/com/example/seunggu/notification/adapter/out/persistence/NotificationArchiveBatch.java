@@ -42,7 +42,7 @@ public class NotificationArchiveBatch {
      * 전용 스케줄러를 쓴다 — 기본 스케줄러를 공유하면 이 배치가 도는 수 분~수십 분 동안
      * Outbox 릴레이가 멈춰 발송이 전면 지연된다 ({@code SchedulingConfig} 참고).
      */
-    @Scheduled(cron = "${notification.archive.cron:0 0 4 1 * *}", scheduler = "achiveScheduler")
+    @Scheduled(cron = "${notification.archive.cron:0 0 4 1 * *}", scheduler = "archiveScheduler")
     public void archiveOldNotifications() {
         LocalDateTime threshold = LocalDateTime.now().minusMonths(retentionMonths);
         long candidates = notificationRepository.countByCreatedAtBefore(threshold);
