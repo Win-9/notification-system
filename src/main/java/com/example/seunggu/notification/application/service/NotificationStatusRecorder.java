@@ -1,5 +1,6 @@
 package com.example.seunggu.notification.application.service;
 
+import java.time.Duration;
 import java.util.UUID;
 
 import com.example.seunggu.notification.application.port.out.NotificationPersistencePort;
@@ -13,23 +14,15 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class NotificationStatusRecorder {
     private final NotificationPersistencePort persistencePort;
+    private static final Duration PROCESSING_LEASE = Duration.ofSeconds(30);
 
     @Transactional
     public Notification startProcessing(UUID notificationId) {
-        Notification notification = persistencePort.findById(notificationId).orElse(null);
-        if (notification == null) {
+        if (!persistencePort.claimForProcessing(notificationId, PROCESSING_LEASE)) {
             return null;
         }
 
-        // 멱등 가드: 이미 끝났거나 확정된 알림은 재전달돼도 건드리지 않는다.
-        NotificationStatus status = notification.getStatus();
-        if (status == NotificationStatus.SENT
-                || status == NotificationStatus.FAILED
-                || status == NotificationStatus.DEAD) {
-            return null;
-        }
-        notification.markProcessing();
-        return persistencePort.save(notification);
+        return persistencePort.findById(notificationId).orElse(null);
     }
 
     /** tx2: 발송 성공 확정 (PROCESSING → SENT). */

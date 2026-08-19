@@ -1,5 +1,6 @@
 package com.example.seunggu.notification.adapter.out.persistence;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -23,6 +24,12 @@ public class NotificationPersistenceAdapter implements NotificationPersistencePo
     @Override
     public Notification save(Notification notification) {
         return repository.save(NotificationJpaEntity.fromDomain(notification)).toDomain();
+    }
+
+    @Override
+    public boolean claimForProcessing(UUID notificationId, Duration lease) {
+        LocalDateTime now = LocalDateTime.now();
+        return repository.claimForProcessing(notificationId, now, now.minus(lease)) > 0;
     }
 
     @Override

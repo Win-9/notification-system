@@ -1,5 +1,6 @@
 package com.example.seunggu.notification.adapter.out.persistence;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -46,4 +47,16 @@ public interface NotificationJpaRepository extends JpaRepository<NotificationJpa
     int deleteArchivedChunk(@Param("threshold") LocalDateTime threshold, @Param("chunkSize") int chunkSize);
 
     long countByCreatedAtBefore(LocalDateTime threshold);
+
+    @Modifying
+    @Query(value = """
+        UPDATE notification
+        SET status = 'PROCESSING',
+            attempt_count = attempt_count + 1,
+            last_attempt_at = :now
+        WHERE id = :id
+          AND ( status IN ('PENDING', 'RETRY_WAIT')
+                OR (status = 'PROCESSING' AND last_attempt_at < :leaseExpiry) )
+        """, nativeQuery = true)
+    int claimForProcessing(@Param("id") UUID id, @Param("now") LocalDateTime now, @Param("leaseExpiry") LocalDateTime minus);
 }
