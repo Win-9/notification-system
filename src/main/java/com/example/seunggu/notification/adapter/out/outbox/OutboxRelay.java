@@ -24,7 +24,7 @@ public class OutboxRelay {
     @Value("${notification.outbox.batch-size:100}")
     private int batchSize;
 
-    @Scheduled(fixedDelayString = "${notification.outbox.poll-interval:1000}")
+    @Scheduled(fixedDelayString = "${notification.outbox.poll-interval:1000}", scheduler = "outboxScheduler")
     public void relay() {
         int published = publishExecutor.publishBatch(batchSize);
         if (published > 0) {
