@@ -34,6 +34,9 @@ public class NotificationArchiveBatch {
     @Value("${notification.archive.retention-months:6}")
     private int retentionMonths;
 
+    @Value("${notification.archive.retention-days}")
+    private int retentionDays;
+
     @Value("${notification.archive.chunk-size:1000}")
     private int chunkSize;
 
@@ -44,7 +47,7 @@ public class NotificationArchiveBatch {
      */
     @Scheduled(cron = "${notification.archive.cron:0 0 4 1 * *}", scheduler = "archiveScheduler")
     public void archiveOldNotifications() {
-        LocalDateTime threshold = LocalDateTime.now().minusMonths(retentionMonths);
+        LocalDateTime threshold = LocalDateTime.now().minusDays(retentionDays);
         long candidates = notificationRepository.countByCreatedAtBefore(threshold);
         if (candidates == 0) {
             log.info("아카이빙 대상 없음 (기준일 {} 이전)", threshold);
