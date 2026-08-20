@@ -1,5 +1,6 @@
 package com.example.seunggu.notification.adapter.out.persistence;
 
+import com.example.seunggu.notification.domain.Notification;
 import com.example.seunggu.notification.domain.NotificationChannel;
 import com.example.seunggu.notification.domain.NotificationStatus;
 import jakarta.persistence.Column;
@@ -66,4 +67,10 @@ public class NotificationArchiveJpaEntity {
     /** 아카이브로 이관된 시각 (운영 추적용). */
     @Column(name = "archived_at", nullable = false, updatable = false)
     private LocalDateTime archivedAt;
+
+    Notification toDomain() {
+        return Notification.restore(id, idempotencyKey, channel, recipient, title, message,
+                status, createdAt, sentAt,
+                attemptCount, lastAttemptAt, lastErrorCode, lastErrorMessage);
+    }
 }

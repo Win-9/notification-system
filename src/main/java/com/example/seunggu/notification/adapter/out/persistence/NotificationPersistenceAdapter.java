@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 public class NotificationPersistenceAdapter implements NotificationPersistencePort {
 
     private final NotificationJpaRepository repository;
+    private final NotificationArchiveJpaRepository archiveRepository;
 
     @Override
     public Notification save(Notification notification) {
@@ -35,6 +36,13 @@ public class NotificationPersistenceAdapter implements NotificationPersistencePo
     @Override
     public Optional<Notification> findById(UUID id) {
         return repository.findById(id).map(NotificationJpaEntity::toDomain);
+    }
+
+    @Override
+    public Optional<Notification> findByIdIncludeArchive(UUID id) {
+        return repository.findById(id)
+                .map(NotificationJpaEntity::toDomain)
+                .or(() -> archiveRepository.findById(id).map(NotificationArchiveJpaEntity::toDomain));
     }
 
     @Override

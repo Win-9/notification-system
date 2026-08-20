@@ -29,7 +29,7 @@ public class NotificationQueryService implements FindNotificationQuery {
     @Override
     @Transactional(readOnly = true)
     public Optional<NotificationResult> findById(UUID id) {
-        return persistencePort.findById(id).map(NotificationResult::from);
+        return persistencePort.findByIdIncludeArchive(id).map(NotificationResult::from);
     }
 
     @Override

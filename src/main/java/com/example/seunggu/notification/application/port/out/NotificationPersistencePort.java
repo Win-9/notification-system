@@ -22,6 +22,8 @@ public interface NotificationPersistencePort {
 
     Optional<Notification> findById(UUID id);
 
+    Optional<Notification> findByIdIncludeArchive(UUID id);
+
     Optional<Notification> findByIdempotencyKey(String idempotencyKey);
 
     /**
