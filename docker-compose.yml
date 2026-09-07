@@ -8,6 +8,27 @@ services:
       MYSQL_ROOT_PASSWORD: root1234
       MYSQL_DATABASE: seunggu
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  mysql-replica:
+    image: mysql:8.0
+    container_name: seunggu-mysql-replica
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+    command: >
+      --server-id=2
+      --log-bin=mysql-bin
+      --binlog-format=ROW
+      --read-only=ON
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql-replica-data:/var/lib/mysql
+    depends_on:
+      - mysql
 
   redis:
     image: redis:7-alpine
@@ -66,3 +87,5 @@ services:
 
 volumes:
   ngrinder-data:
+  mysql-data:
+  mysql-replica-data:
